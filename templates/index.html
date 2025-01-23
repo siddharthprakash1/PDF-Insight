@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PDF Content Extractor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 1s;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--accent), #9089fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .upload-container {
+            background: var(--bg-secondary);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            animation: fadeInUp 1s;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: var(--accent);
+            color: white;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .file-label:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-weight: 500;
+            transform-origin: center;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+            transform: scale(1.05);
+        }
+
+        .section {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section h2 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .text {
+            white-space: pre-wrap;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .error {
+            color: #ef4444;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            transition: transform 0.3s ease;
+        }
+
+        img:hover {
+            transform: scale(1.02);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: var(--bg-primary);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--bg-secondary);
+        }
+
+        th {
+            background: var(--accent);
+            color: white;
+        }
+
+        tr:hover {
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--bg-secondary);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        #clearButton {
+            background: #ef4444;
+        }
+
+        #clearButton:hover {
+            background: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PDF Content Extractor</h1>
+            <p>Upload your PDF to extract text, tables, and images</p>
+        </div>
+
+        <div class="upload-container">
+            <form id="uploadForm">
+                <div class="file-input-wrapper">
+                    <label class="file-label" for="pdfFile">
+                        Choose PDF File
+                    </label>
+                    <input type="file" id="pdfFile" accept=".pdf" required>
+                    <div class="file-name" id="fileName"></div>
+                </div>
+                <div class="button-group">
+                    <button type="submit">Extract Content</button>
+                    <button type="button" id="clearButton" class="hidden" onclick="clearContent()">Clear Results</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="results" class="hidden">
+            <div id="textOutput" class="section">
+                <h2>Text Content</h2>
+                <div class="text"></div>
+            </div>
+            
+            <div id="tableOutput" class="section">
+                <h2>Tables</h2>
+            </div>
+            
+            <div id="imageOutput" class="section">
+                <h2>Images</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('pdfFile');
+        const fileName = document.getElementById('fileName');
+        const loading = document.querySelector('.loading');
+
+        fileInput.addEventListener('change', (e) => {
+            fileName.textContent = e.target.files[0]?.name || '';
+        });
+
+        function clearContent() {
+            document.getElementById('results').classList.add('hidden');
+            document.getElementById('clearButton').classList.add('hidden');
+            document.getElementById('pdfFile').value = '';
+            fileName.textContent = '';
+            document.getElementById('textOutput').querySelector('.text').textContent = '';
+            document.getElementById('tableOutput').innerHTML = '<h2>Tables</h2>';
+            document.getElementById('imageOutput').innerHTML = '<h2>Images</h2>';
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loading.classList.add('active');
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('pdfFile');
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/extract', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                document.getElementById('results').classList.remove('hidden');
+                document.getElementById('clearButton').classList.remove('hidden');
+                
+                if (data.error) {
+                    document.getElementById('textOutput').innerHTML = `<span class="error">${data.error}</span>`;
+                } else {
+                    document.getElementById('textOutput').querySelector('.text').textContent = data.text;
+                    
+                    const tableOutput = document.getElementById('tableOutput');
+                    tableOutput.innerHTML = '<h2>Tables</h2>';
+                    data.tables.forEach((table, index) => {
+                        const tableWrapper = document.createElement('div');
+                        tableWrapper.innerHTML = table;
+                        tableWrapper.style.animationDelay = `${index * 0.2}s`;
+                        tableOutput.appendChild(tableWrapper);
+                    });
+                    
+                    const imageOutput = document.getElementById('imageOutput');
+                    imageOutput.innerHTML = '<h2>Images</h2>';
+                    data.images.forEach((imgSrc, index) => {
+                        const img = document.createElement('img');
+                        img.src = imgSrc;
+                        img.alt = 'Extracted image';
+                        img.style.animationDelay = `${index * 0.2}s`;
+                        img.classList.add('animate__animated', 'animate__fadeIn');
+                        imageOutput.appendChild(img);
+                    });
+                }
+            } catch (error) {
+                document.getElementById('textOutput').innerHTML = `<span class="error">Error: ${error.message}</span>`;
+            } finally {
+                loading.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
