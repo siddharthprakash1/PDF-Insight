@@ -76,7 +76,10 @@ PDF-Insight/
 - jpype1==1.5.0
 
 ## License
-MIT
+
+This project is licensed under the [MIT License](LICENSE).  
+© 2025 Siddharth
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
